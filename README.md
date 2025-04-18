@@ -10,6 +10,7 @@ Services backend pour le Système de Gestion Documentaire Intelligent.
 - Chat Service: Messagerie en temps réel
 - API Gateway: Point d'entrée unique de l'API
 - Eureka Server: Service discovery
+- Authentification-service: Service d'authentification client 
 
 ## Installation et démarrage
 
