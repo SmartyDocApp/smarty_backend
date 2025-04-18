@@ -58,21 +58,21 @@ MySQL pour le stockage relationnel des données utilisateur :
 - GET /api/users/search?query= - Rechercher des utilisateurs par nom/email
 
 ## Faits
-✅ Structure de base du service Spring Boot
-✅ Modèles de données utilisateur et contacts
-✅ Repositories JPA pour accès aux données
-✅ Configuration de connexion à MySQL
-✅ Configuration d'enregistrement auprès d'Eureka
-✅ Endpoints REST fondamentaux (CRUD utilisateur)
-✅ Dockerfile pour la conteneurisation
-✅ Mise en place des mécanismes de sécurité avec JWT
+- ✅ Structure de base du service Spring Boot
+- ✅ Modèles de données utilisateur et contacts
+- ✅ Repositories JPA pour accès aux données
+- ✅ Configuration de connexion à MySQL
+- ✅ Configuration d'enregistrement auprès d'Eureka
+- ✅ Endpoints REST fondamentaux (CRUD utilisateur)
+- ✅ Dockerfile pour la conteneurisation
+- ✅ Mise en place des mécanismes de sécurité avec JWT
 
 ## À faire
-⬜ Implémentation complète des contacts utilisateur
-⬜ Récupération des configurations depuis Config Server
-⬜ Pagination et tri pour les listes d'utilisateurs
-⬜ Validation avancée des données utilisateur
-⬜ Tests unitaires et d'intégration
+- ⬜ Implémentation complète des contacts utilisateur
+- ⬜ Récupération des configurations depuis Config Server
+- ⬜ Pagination et tri pour les listes d'utilisateurs
+- ⬜ Validation avancée des données utilisateur
+- ⬜ Tests unitaires et d'intégration
 
 ## Notes
 - Le service doit être conçu avec une séparation claire entre les couches (contrôleur, service, repository)
