@@ -1,64 +1,29 @@
-package com.backend.userservice.model;
-
-import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+package com.backend.userservice.dto;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
-@Table(name = "users")
-public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+public class UserDto {
+
     private String id;
-
-    @Column(unique = true, nullable = false)
     private String username;
-
-    @Column(nullable = false, unique = true)
     private String email;
-
-    @Column(name = "first_name")
     private String firstName;
-
-    @Column(name = "last_name")
     private String lastName;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @Column(name = "last_login")
     private LocalDateTime lastLogin;
-
-    //sert à gérer l'état actif/inactif d'un compte utilisateur
-    private boolean enabled = true;
-
-
-    @ManyToMany(fetch = FetchType.EAGER) // EAGER spécifie que les rôles seront chargés avec l'utilisateur
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"), // défini la clé étrangère pour l'utilisateur
-            inverseJoinColumns = @JoinColumn(name = "role_id") //  Définit la clé étrangère qui relie la table user_roles à la table roles via la colonne role_id.
-    )
-
-    private Set<Role> roles = new HashSet<>();
+    private boolean enabled;
+    private Set<String> roles = new HashSet<>(); // Set garanti que tout les éléments sont uniques
 
 
-
-    public User() {
+    public UserDto() {
     }
 
-    public User(String id, String username, String email, String firstName, String lastName, LocalDateTime createdAt,
-            LocalDateTime updatedAt, LocalDateTime lastLogin, boolean enabled, Set<Role> roles) {
+    public UserDto(String id, String username, String email, String firstName, String lastName, LocalDateTime createdAt,
+            LocalDateTime updatedAt, LocalDateTime lastLogin, boolean enabled, Set<String> roles) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -143,14 +108,11 @@ public class User {
         this.enabled = enabled;
     }
 
-    public Set<Role> getRoles() {
+    public Set<String> getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
+    public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 }
-
-
-

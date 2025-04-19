@@ -4,7 +4,8 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:mysql://mysql:3306/smarty-users?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://mysql:3306/smarty-users
+#    ?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: user
     password: 54321
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -21,8 +22,16 @@ eureka:
   client:
     service-url:
       defaultZone: http://eureka-server:8761/eureka/
-      instance:
-        prefer-ip-address: true
+  instance:
+    prefer-ip-address: true
 
-
-
+    #Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Expose tous les endpoints
+  endpoint:
+    health:
+      probes:
+        enabled: true
