@@ -1,0 +1,17 @@
+# Utiliser une image Java 17 comme base
+FROM openjdk:17-jdk-slim
+
+# Installer curl pour la vérification de santé
+RUN apt-get update && apt-get install -y curl
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier le fichier JAR compilé
+COPY target/eureka-server-0.0.1-SNAPSHOT.jar app.jar
+
+# Exposer le port Eureka (8761 par défaut)
+EXPOSE 8761
+
+# Commande pour exécuter l'application
+ENTRYPOINT ["java", "-jar", "app.jar"]

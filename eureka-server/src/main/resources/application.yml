@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: eureka-server
+
+server:
+  port: 8761
+
+eureka:
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  server:
+    wait-time-in-ms-when-sync-empty: 0
+    enableSelfPreservation: false
+
+#Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Expose tous les endpoints
+  endpoint:
+    health:
+      probes:
+        enabled: true
