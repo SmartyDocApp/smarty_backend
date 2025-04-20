@@ -32,24 +32,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
 
-        // Vérifie si l'en-tête "Authorization" est absent ou ne commence pas par "Bearer ".
-        // Si c'est le cas, la requête est transmise au filtre suivant sans traitement supplémentaire.
+        // Si aucun token n'est fourni, renvoyer directement 401
         if (header == null || !header.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+            response.getWriter().write("Authentication required");
+            return; // Arrêter le traitement ici
         }
 
-        // Récupère le token JWT à partir de l'en-tête "Authorization" en supprimant le préfixe "Bearer ".
+        // Traitement du token comme avant
         String token = header.substring(7);
 
-        // Vérifie si le token est vide ou nul.
         try {
             Claims claims = jwtParser.parseClaimsJws(token).getBody();
 
             String username = claims.getSubject();
             List<String> authorities = (List<String>) claims.get("authorities");
 
-            // Si le nom d'utilisateur est présent, crée un objet UsernamePasswordAuthenticationToken
             if (username != null) {
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         username,
@@ -61,7 +59,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (JwtException e) {
-            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+            response.getWriter().write("Invalid token");
+            return; // Arrêter le traitement ici
         }
 
         filterChain.doFilter(request, response);

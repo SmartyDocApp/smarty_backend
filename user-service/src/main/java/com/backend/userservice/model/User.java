@@ -42,8 +42,8 @@ public class User {
     //sert à gérer l'état actif/inactif d'un compte utilisateur
     private boolean enabled = true;
 
-
-    @ManyToMany(fetch = FetchType.EAGER) // EAGER spécifie que les rôles seront chargés avec l'utilisateur
+    // table de jointure user_roles
+    @ManyToMany(fetch = FetchType.EAGER) // EAGER spécifie que les rôles seront chargés avec l'utilisateur ( au lancement du service)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"), // défini la clé étrangère pour l'utilisateur
