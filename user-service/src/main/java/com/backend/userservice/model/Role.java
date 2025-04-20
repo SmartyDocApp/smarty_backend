@@ -18,9 +18,10 @@ public class Role {
 
     private String description;
 
+    // table de jointure role_permissions
     @ManyToMany(fetch = FetchType.EAGER) // EAGER spécifie que les rôles seront chargés avec l'utilisateur
     @JoinTable(
-            name = "user_roles",
+            name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_id"),// défini la clé étrangère pour le rôle
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
