@@ -1,0 +1,68 @@
+### Maven ###
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+.idea/
+.idea/*
+out/
+.idea_modules/
+
+
+### Java ###
+# Compiled class file
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+### Spring Boot ###
+**/application-*.properties
+**/application-*.yml
+**/application-*.yaml
+!**/application-example.properties
+!**/application-example.yml
+!**/application-example.yaml
+
+### Docker ###`
+docker-compose.override.yml
+
+### OS specific ###
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+### Logs and databases ###
+*.log
+*.sqlite
+*.h2.db
