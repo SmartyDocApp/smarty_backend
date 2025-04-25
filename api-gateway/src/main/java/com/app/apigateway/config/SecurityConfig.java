@@ -18,6 +18,7 @@ import javax.crypto.SecretKey;
 public class SecurityConfig {
 
     // JWT secret key for signing and verifying tokens
+    // the value in the braces is the default value if the property is not set
     @Value("${jwt.secret:defaultsecretkeymustbelongerthan256bits123456789101112}")
     private String jwtSecret;
 
@@ -30,7 +31,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public WebFilter jwtAuthenticationFilter() {
+    public WebFilter jwtAuthWebFilter() {
         // This filter intercepts incoming requests and checks for JWT tokens
         return (exchange, chain) -> {
             String path = exchange.getRequest().getPath().value();

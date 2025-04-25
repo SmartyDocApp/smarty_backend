@@ -6,12 +6,19 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -25,6 +32,22 @@ public class SecurityConfig {
     // injecte la propriété jwt.secret
    @Value("${jwt.secret:defaultsecretkeymustbelongerthan256bits123456789101112}")
    private String jwtSecret;
+
+   @Autowired
+   private UserDetailsService userDetailsService;
+
+   @Bean
+   public PasswordEncoder passwordEncoder() {
+       return new BCryptPasswordEncoder();
+   }
+
+   @Bean
+   public AuthenticationManager authenticationManager() {
+       DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+       authProvider.setUserDetailsService(userDetailsService);
+       authProvider.setPasswordEncoder(passwordEncoder());
+       return new ProviderManager(authProvider);
+   }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -47,6 +70,8 @@ public class SecurityConfig {
               .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
               .authorizeHttpRequests(auth -> auth
                       .requestMatchers("/actuator/**").permitAll() // Pour le monitoring
+                      .requestMatchers("/api/auth/**").permitAll() // Authentication endpoints
+                      .requestMatchers("/api/public/**").permitAll() // Public endpoints
                       .anyRequest().authenticated()
               )
               .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
