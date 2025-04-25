@@ -129,7 +129,7 @@ resilience4j:
 jwt:
   # Secret key to validate JWT tokens
   # CAUTION: Use a more secure key in production and store it in a vault
-  secret: defaultsecretkeymustbelongerthan256bits123456789101112
+  secret: ${JWT_SECRET}
 
 # -------------------------------------------------------------------------
 # ACTUATOR CONFIGURATION FOR MONITORING

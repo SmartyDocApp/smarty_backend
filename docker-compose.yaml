@@ -45,6 +45,29 @@ services:
       timeout: 5s
       retries: 5
 
+
+  #Service APi Gateway
+  api-gateway:
+    build: ./api-gateway
+    image: smarty/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    env_file:
+      - ./api-gateway/.env
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - smarty-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Service utilisateur
   user-service:
     build: ./user-service

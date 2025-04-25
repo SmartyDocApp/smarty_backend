@@ -36,10 +36,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header == null || !header.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
             response.getWriter().write("Authentication required");
-            return; // Arrêter le traitement ici
+            return;
         }
 
-        // Traitement du token comme avant
         String token = header.substring(7);
 
         try {

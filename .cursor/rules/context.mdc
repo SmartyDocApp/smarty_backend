@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+Always look to all context folder of the main folder
+
+- You can @ files here
+
+- You can use markdown but dont have to
