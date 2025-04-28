@@ -8,10 +8,12 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: user
       MYSQL_PASSWORD: 54321
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     ports:
       - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d
     networks:
       - smarty-network
     healthcheck:
@@ -45,7 +47,6 @@ services:
       timeout: 5s
       retries: 5
 
-
   #Service APi Gateway
   api-gateway:
     build: ./api-gateway
@@ -63,7 +64,7 @@ services:
     networks:
       - smarty-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -86,7 +87,7 @@ services:
     networks:
       - smarty-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8100/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8100/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5

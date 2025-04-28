@@ -5,7 +5,7 @@ spring:
   application:
     name: auth-service
   datasource:
-    url: jdbc:mysql://mysql:3306/auth-db?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3308/auth-db?createDatabaseIfNotExist=true
     username: user
     password: 54321
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -21,14 +21,14 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
 
 jwt:
   secret: aMcJf4ueaCnS39xvkn73Jjf930shfnF45hn93mFnvYrTuIoK3cv0
-  expiration: 86400000  # 24 heures en millisecondes (24 * 60 * 60 * 1000)
-  refresh-expiration: 604800000  # 7 jours en millisecondes (7 * 24 * 60 * 60 * 1000)
+  expiration: 86400000 # 24 heures en millisecondes (24 * 60 * 60 * 1000)
+  refresh-expiration: 604800000 # 7 jours en millisecondes (7 * 24 * 60 * 60 * 1000)
 
 # Configuration pour la communication avec le service utilisateur
 user-service:
