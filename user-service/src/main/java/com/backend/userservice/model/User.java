@@ -19,6 +19,9 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(nullable = false)
+    private String password;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -57,10 +60,11 @@ public class User {
     public User() {
     }
 
-    public User(String id, String username, String email, String firstName, String lastName, LocalDateTime createdAt,
+    public User(String id, String username, String password,  String email, String firstName, String lastName, LocalDateTime createdAt,
             LocalDateTime updatedAt, LocalDateTime lastLogin, boolean enabled, Set<Role> roles) {
         this.id = id;
         this.username = username;
+        this.password = password;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -69,6 +73,14 @@ public class User {
         this.lastLogin = lastLogin;
         this.enabled = enabled;
         this.roles = roles;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getId() {
