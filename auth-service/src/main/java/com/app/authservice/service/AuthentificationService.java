@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.app.authservice.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +15,10 @@ import org.springframework.stereotype.Service;
 
 import com.app.authservice.client.UserServiceClient;
 import com.app.authservice.dto.LoginRequest;
+import com.app.authservice.dto.RegisterRequest;
 import com.app.authservice.dto.TokenResponse;
 import com.app.authservice.dto.TokenValidationResponse;
-import com.app.authservice.service.JwtService;
+import com.app.authservice.dto.UserDto;
 import com.app.authservice.exception.InvalidTokenException;
 import com.app.authservice.model.AuthToken;
 import com.app.authservice.repository.AuthTokenRepository;
@@ -157,6 +157,34 @@ public class AuthentificationService {
         token.setExpiryDate(expiryDate);
         
         tokenRepository.save(token);
+    }
+    
+    public TokenResponse register(RegisterRequest request) {
+        // Call userServiceClient to create a new user
+        ResponseEntity<UserDto> userResponse = userServiceClient.createUser(request);
+        
+        if (userResponse.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Échec de l'enregistrement de l'utilisateur");
+        }
+        
+        UserDto user = userResponse.getBody();
+        
+        // Génération des tokens
+        List<String> roles = new ArrayList<>(user.getRoles());
+        String accessToken = jwtService.generateAccessToken(user.getUsername(), roles);
+        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+        
+        // Stockage des tokens
+        saveToken(user.getId(), accessToken, "ACCESS");
+        saveToken(user.getId(), refreshToken, "REFRESH");
+        
+        // Construction de la réponse
+        TokenResponse tokenResponse = new TokenResponse();
+        tokenResponse.setAccessToken(accessToken);
+        tokenResponse.setRefreshToken(refreshToken);
+        tokenResponse.setExpiresAt(LocalDateTime.now().plusSeconds(86400)); // 24h
+        
+        return tokenResponse;
     }
     
     private void revokeAccessTokens(String userId) {
