@@ -18,6 +18,6 @@ public interface UserServiceClient {
     @PutMapping("/api/users/{id}/last-login")
     ResponseEntity<Void> updateLastLogin(@PathVariable String id, @RequestBody Map<String, LocalDateTime> lastLoginMap);
 
-    @PostMapping("/api/users")
+    @PostMapping("/api/users/register")
     ResponseEntity<UserDto> createUser(@RequestBody RegisterRequest registerRequest);
 }

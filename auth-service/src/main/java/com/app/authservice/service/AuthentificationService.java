@@ -19,6 +19,7 @@ import com.app.authservice.dto.RegisterRequest;
 import com.app.authservice.dto.TokenResponse;
 import com.app.authservice.dto.TokenValidationResponse;
 import com.app.authservice.dto.UserDto;
+import com.app.authservice.exception.DuplicateUserException;
 import com.app.authservice.exception.InvalidTokenException;
 import com.app.authservice.model.AuthToken;
 import com.app.authservice.repository.AuthTokenRepository;
@@ -160,30 +161,38 @@ public class AuthentificationService {
     }
     
     public TokenResponse register(RegisterRequest request) {
-        // Call userServiceClient to create a new user
         ResponseEntity<UserDto> userResponse = userServiceClient.createUser(request);
-        
-        if (userResponse.getStatusCode() != HttpStatus.OK) {
+
+        if (userResponse.getStatusCode() != HttpStatus.OK && userResponse.getStatusCode() != HttpStatus.CREATED) {
+            // Log du code et du message d'erreur du user-service
+            String errorMsg = "Erreur user-service: code=" + userResponse.getStatusCode() + ", body=" + userResponse.getBody();
+            System.err.println(errorMsg);
+
+            // Gestion du cas de doublon
+            if (userResponse.getStatusCode() == HttpStatus.CONFLICT) {
+                throw new DuplicateUserException("Un utilisateur avec ce nom ou cet email existe déjà.");
+            }
+
             throw new RuntimeException("Échec de l'enregistrement de l'utilisateur");
         }
-        
+
         UserDto user = userResponse.getBody();
-        
+
         // Génération des tokens
         List<String> roles = new ArrayList<>(user.getRoles());
         String accessToken = jwtService.generateAccessToken(user.getUsername(), roles);
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());
-        
+
         // Stockage des tokens
         saveToken(user.getId(), accessToken, "ACCESS");
         saveToken(user.getId(), refreshToken, "REFRESH");
-        
+
         // Construction de la réponse
         TokenResponse tokenResponse = new TokenResponse();
         tokenResponse.setAccessToken(accessToken);
         tokenResponse.setRefreshToken(refreshToken);
         tokenResponse.setExpiresAt(LocalDateTime.now().plusSeconds(86400)); // 24h
-        
+
         return tokenResponse;
     }
     

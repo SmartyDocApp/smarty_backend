@@ -6,6 +6,7 @@ import com.backend.userservice.model.User;
 import com.backend.userservice.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,11 +17,15 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleService roleService;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired //injecte l'interface UserRepository
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
     }
+
 
     // Récupérer tous les utilisateurs
     public List<UserDto> getAllUsers() {
@@ -67,6 +72,8 @@ public class UserService {
     }
 
 
+
+
     private User convertToEntity(UserDto dto) {
         User user = new User();
         user.setUsername(dto.getUsername());
@@ -75,6 +82,11 @@ public class UserService {
         user.setLastName(dto.getLastName());
         user.setEnabled(dto.isEnabled());
 
+        if (dto.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        user.setRoles(roleService.getDefaultRoles());
         // Note: Roles would be set separately by a RoleService
 
         return user;

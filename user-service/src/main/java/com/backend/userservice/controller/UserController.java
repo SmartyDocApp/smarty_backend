@@ -1,5 +1,6 @@
 package com.backend.userservice.controller;
 
+import com.backend.userservice.dto.RegisterRequest;
 import com.backend.userservice.dto.UserDto;
 import com.backend.userservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,18 @@ public class UserController {
     // Créer un user
     @PostMapping
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
+        UserDto createdUser = userService.createUser(userDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserDto> registerUser(@RequestBody RegisterRequest registerRequest) {
+        UserDto userDto = new UserDto();
+        userDto.setUsername(registerRequest.getUsername());
+        userDto.setPassword(registerRequest.getPassword());
+        userDto.setEmail(registerRequest.getEmail());
+        userDto.setEnabled(true);
+
         UserDto createdUser = userService.createUser(userDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
