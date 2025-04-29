@@ -85,8 +85,6 @@ public class UserService {
         if (dto.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
-
-        user.setRoles(roleService.getDefaultRoles());
         // Note: Roles would be set separately by a RoleService
 
         return user;
