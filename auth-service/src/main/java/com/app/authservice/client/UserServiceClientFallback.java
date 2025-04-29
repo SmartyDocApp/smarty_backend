@@ -17,13 +17,24 @@ public class UserServiceClientFallback implements UserServiceClient {
         return ResponseEntity.notFound().build();
     }
 
-    @Override
-    public ResponseEntity<Void> updateLastLogin(String id, Map<String, LocalDateTime> lastLoginMap) {
-        return ResponseEntity.ok().build();
-    }
+//    @Override
+//    public ResponseEntity<Void> updateLastLogin(String id, Map<String, LocalDateTime> lastLoginMap) {
+//        return ResponseEntity.ok().build();
+//    }
 
     @Override
     public ResponseEntity<UserDto> createUser(RegisterRequest registerRequest) {
         return ResponseEntity.status(503).build(); // Service indisponible
+    }
+
+    @Override
+    public ResponseEntity<UserDto> loginUser(Map<String, String> loginRequest) {
+        // Ici, tu peux retourner une réponse d’erreur ou null selon ta logique
+        return ResponseEntity.status(503).build(); // 503 Service Unavailable
+    }
+
+    @Override
+    public ResponseEntity<UserDto> getUserByEmail(String email) {
+        return ResponseEntity.notFound().build();
     }
 } 
