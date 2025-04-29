@@ -39,7 +39,7 @@ public class GatewayConfig {
                                 .rewritePath("/api/users/(?<segment>.*)", "/api/users/${segment}"))
                         .uri("lb://user-service"))
 
-//                // Document Service Routes (à implémenter ultérieurement)
+//                
                 .route("document-service", r -> r.path("/api/documents/**")
                         .filters(f -> f
                                 .circuitBreaker(config -> config
@@ -48,7 +48,7 @@ public class GatewayConfig {
                                 .rewritePath("/api/documents/(?<segment>.*)", "/api/documents/${segment}"))
                         .uri("lb://document-service"))
 
-                // Workspace Service Routes (à implémenter ultérieurement)
+                // Workspace Service Routes
                 .route("workspace-service", r -> r.path("/api/workspaces/**")
                         .filters(f -> f
                                 .circuitBreaker(config -> config
@@ -57,7 +57,7 @@ public class GatewayConfig {
                                 .rewritePath("/api/workspaces/(?<segment>.*)", "/api/workspaces/${segment}"))
                         .uri("lb://workspace-service"))
 
-                // Chat Service Routes (à implémenter ultérieurement)
+                // Chat Service Routes 
                 .route("chat-service", r -> r.path("/api/chat/**", "/ws/**")
                         .filters(f -> f
                                 .circuitBreaker(config -> config
@@ -65,7 +65,7 @@ public class GatewayConfig {
                                         .setFallbackUri("forward:/fallback/chat-service")))
                         .uri("lb://chat-service"))
 
-                // Auth Service Routes (à implémenter ultérieurement)
+                // Auth Service Routes 
                 .route("auth-service", r -> r.path("/api/auth/**")
                         .filters(f -> f
                                 .circuitBreaker(config -> config

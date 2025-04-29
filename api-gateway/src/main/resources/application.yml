@@ -2,14 +2,14 @@
 # SERVER CONFIGURATION
 # -------------------------------------------------------------------------
 server:
-  port: 8080  # Port on which the API Gateway will listen for incoming requests
+  port: 8080 # Port on which the API Gateway will listen for incoming requests
 
 # -------------------------------------------------------------------------
 # SPRING CONFIGURATION
 # -------------------------------------------------------------------------
 spring:
   application:
-    name: api-gateway  # Application name as it will appear in Eureka
+    name: api-gateway # Application name as it will appear in Eureka
 
   # -------------------------------------------------------------------------
   # SPRING CLOUD GATEWAY CONFIGURATION
@@ -19,24 +19,24 @@ spring:
       # Automatic service discovery via Eureka
       discovery:
         locator:
-          enabled: true                # Enables automatic service discovery via Eureka
-          lower-case-service-id: true  # Converts service IDs to lowercase for routing
+          enabled: true # Enables automatic service discovery via Eureka
+          lower-case-service-id: true # Converts service IDs to lowercase for routing
 
       # Filters applied to all routes
       default-filters:
         # Rate limiter configuration to prevent abuse
-        - name: RequestRateLimiter     # Limits the number of requests per period
+        - name: RequestRateLimiter # Limits the number of requests per period
           args:
-            redis-rate-limiter:        # Redis-specific rate limiter configuration
-              replenishRate: 10        # Number of requests allowed per second
-              burstCapacity: 20        # Maximum number of burst requests
-              requestedTokens: 1       # Number of tokens consumed per request
-            key-resolver: "#{@ipKeyResolver}"  # Function to identify request origin (by IP)
+            redis-rate-limiter: # Redis-specific rate limiter configuration
+              replenishRate: 10 # Number of requests allowed per second
+              burstCapacity: 20 # Maximum number of burst requests
+              requestedTokens: 1 # Number of tokens consumed per request
+            key-resolver: "#{@ipKeyResolver}" # Function to identify request origin (by IP)
 
         # Adding information in request and response headers
-        - AddRequestHeader=X-Request-Source, api-gateway  # Adds a header indicating the request source
-        - AddResponseHeader=X-Response-Time, $\{responseTime:120}  # Adds response time in header
-        - SetResponseHeader=X-Powered-By, SGDI Gateway  # Identifies the gateway in responses
+        - AddRequestHeader=X-Request-Source, api-gateway # Adds a header indicating the request source
+        - AddResponseHeader=X-Response-Time, $\{responseTime:120} # Adds response time in header
+        - SetResponseHeader=X-Powered-By, SGDI Gateway # Identifies the gateway in responses
 
 # -------------------------------------------------------------------------
 # EUREKA CONFIGURATION
@@ -44,9 +44,9 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/  # Eureka server URL for registration
+      defaultZone: http://localhost:8761/eureka/ # Eureka server URL for registration
   instance:
-    prefer-ip-address: true  # Uses IP address instead of hostname for registration
+    prefer-ip-address: true # Uses IP address instead of hostname for registration
 
 # -------------------------------------------------------------------------
 # RESILIENCE4J CIRCUIT BREAKER CONFIGURATION
@@ -56,14 +56,14 @@ resilience4j:
     instances:
       # User service configuration
       userServiceCircuitBreaker:
-        registerHealthIndicator: true            # Exposes health metrics via actuator
-        slidingWindowSize: 10                    # Number of requests to consider for circuit state
-        minimumNumberOfCalls: 5                  # Minimum number of calls before calculating failure rate
+        registerHealthIndicator: true # Exposes health metrics via actuator
+        slidingWindowSize: 10 # Number of requests to consider for circuit state
+        minimumNumberOfCalls: 5 # Minimum number of calls before calculating failure rate
         permittedNumberOfCallsInHalfOpenState: 3 # Number of allowed calls in half-open state
-        automaticTransitionFromOpenToHalfOpenEnabled: true  # Automatic transition from open to half-open
-        waitDurationInOpenState: 5s              # Waiting time before changing to half-open state
-        failureRateThreshold: 50                 # Percentage of failures needed to open the circuit
-        eventConsumerBufferSize: 10              # Buffer size for events
+        automaticTransitionFromOpenToHalfOpenEnabled: true # Automatic transition from open to half-open
+        waitDurationInOpenState: 5s # Waiting time before changing to half-open state
+        failureRateThreshold: 50 # Percentage of failures needed to open the circuit
+        eventConsumerBufferSize: 10 # Buffer size for events
 
       # Similar configuration for other services
       documentServiceCircuitBreaker:
@@ -113,7 +113,7 @@ resilience4j:
     instances:
       # Timeout for each service
       userServiceCircuitBreaker:
-        timeoutDuration: 5s  # Maximum waiting time before considering the request as failed
+        timeoutDuration: 5s # Maximum waiting time before considering the request as failed
       documentServiceCircuitBreaker:
         timeoutDuration: 5s
       workspaceServiceCircuitBreaker:
@@ -129,7 +129,7 @@ resilience4j:
 jwt:
   # Secret key to validate JWT tokens
   # CAUTION: Use a more secure key in production and store it in a vault
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437}
 
 # -------------------------------------------------------------------------
 # ACTUATOR CONFIGURATION FOR MONITORING
@@ -138,9 +138,9 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"  # Exposes all monitoring endpoints (restrict in production)
+        include: "*" # Exposes all monitoring endpoints (restrict in production)
   endpoint:
     health:
-      show-details: always  # Shows complete health details
+      show-details: always # Shows complete health details
       probes:
-        enabled: true  # Enables health probes for Kubernetes integration
+        enabled: true # Enables health probes for Kubernetes integration
