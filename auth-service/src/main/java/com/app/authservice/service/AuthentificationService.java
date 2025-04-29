@@ -2,9 +2,7 @@ package com.app.authservice.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,38 +38,32 @@ public class AuthentificationService {
     }
     
     public TokenResponse login(LoginRequest loginRequest) {
-        // Appel au user-service pour vérification
-        ResponseEntity<UserDto> userResponse = userServiceClient.getUserByUsername(loginRequest.getUsername());
-        
+        // Appel au user-service pour vérification via /api/users/login
+        java.util.Map<String, String> loginMap = new java.util.HashMap<>();
+        loginMap.put("email", loginRequest.getEmail());
+        loginMap.put("password", loginRequest.getPassword());
+        ResponseEntity<UserDto> userResponse = userServiceClient.loginUser(loginMap);
+
         if (userResponse.getStatusCode() != HttpStatus.OK) {
-            throw new UsernameNotFoundException("Utilisateur non trouvé");
+            throw new UsernameNotFoundException("Utilisateur non trouvé ou mot de passe incorrect");
         }
-        
+
         UserDto user = userResponse.getBody();
-        
-        // En production, la vérification du mot de passe devrait être déléguée au user-service
-        // Ici simplifié pour la démonstration
-        
+
         // Génération des tokens
         List<String> roles = new ArrayList<>(user.getRoles());
-        String accessToken = jwtService.generateAccessToken(user.getUsername(), roles);
-        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
-        
+        String accessToken = jwtService.generateAccessToken(user.getEmail(), roles);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
         // Stockage des tokens
         saveToken(user.getId(), accessToken, "ACCESS");
         saveToken(user.getId(), refreshToken, "REFRESH");
-        
-        // Mise à jour de la dernière connexion
-        Map<String, LocalDateTime> lastLoginMap = new HashMap<>();
-        lastLoginMap.put("lastLogin", LocalDateTime.now());
-        userServiceClient.updateLastLogin(user.getId(), lastLoginMap);
-        
+
         // Construction de la réponse
         TokenResponse tokenResponse = new TokenResponse();
         tokenResponse.setAccessToken(accessToken);
         tokenResponse.setRefreshToken(refreshToken);
         tokenResponse.setExpiresAt(LocalDateTime.now().plusSeconds(86400)); // 24h
-        
+
         return tokenResponse;
     }
     
@@ -122,7 +114,7 @@ public class AuthentificationService {
         
         // Génération d'un nouveau token d'accès
         List<String> roles = new ArrayList<>(user.getRoles());
-        String newAccessToken = jwtService.generateAccessToken(username, roles);
+        String newAccessToken = jwtService.generateAccessToken(user.getEmail(), roles);
         
         // Stockage du nouveau token
         saveToken(user.getId(), newAccessToken, "ACCESS");
@@ -180,8 +172,8 @@ public class AuthentificationService {
 
         // Génération des tokens
         List<String> roles = new ArrayList<>(user.getRoles());
-        String accessToken = jwtService.generateAccessToken(user.getUsername(), roles);
-        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+        String accessToken = jwtService.generateAccessToken(user.getEmail(), roles);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
         // Stockage des tokens
         saveToken(user.getId(), accessToken, "ACCESS");

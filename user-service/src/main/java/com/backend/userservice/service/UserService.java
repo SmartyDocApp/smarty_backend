@@ -1,17 +1,17 @@
 package com.backend.userservice.service;
 
 
-import com.backend.userservice.dto.UserDto;
-import com.backend.userservice.model.User;
-import com.backend.userservice.repository.UserRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.backend.userservice.dto.UserDto;
+import com.backend.userservice.model.User;
+import com.backend.userservice.repository.UserRepository;
 
 @Service //
 public class UserService {
@@ -24,6 +24,36 @@ public class UserService {
         this.userRepository = userRepository;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public UserDto loginUser(String email, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            // Vérification du mot de passe haché
+            if (passwordEncoder.matches(password, user.getPassword())) {
+                // Construction manuelle du UserDto
+                UserDto dto = new UserDto();
+                dto.setId(user.getId());
+                dto.setUsername(user.getUsername());
+                dto.setEmail(user.getEmail());
+                dto.setFirstName(user.getFirstName());
+                dto.setLastName(user.getLastName());
+                dto.setCreatedAt(user.getCreatedAt());
+                dto.setUpdatedAt(user.getUpdatedAt());
+                dto.setLastLogin(user.getLastLogin());
+                dto.setEnabled(user.isEnabled());
+                // Conversion des rôles
+                Set<String> roles = user.getRoles().stream()
+                        .map(role -> role.getName()) // adapte selon ta classe Role
+                        .collect(Collectors.toSet());
+                dto.setRoles(roles);
+                // Ne JAMAIS renvoyer le mot de passe !
+                dto.setPassword(null);
+                return dto;
+            }
+        }
+        return null;
     }
 
 
@@ -71,8 +101,11 @@ public class UserService {
         return convertToDto(savedUser);
     }
 
-
-
+    // récupérer un utilisateur par son email
+    public Optional<UserDto> getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(this::convertToDto);
+    }
 
     private User convertToEntity(UserDto dto) {
         User user = new User();
