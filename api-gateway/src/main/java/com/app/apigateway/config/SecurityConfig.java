@@ -1,5 +1,6 @@
 package com.app.apigateway.config;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -8,18 +9,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
+import java.util.List;
+import java.util.function.Predicate;
 
 @Configuration
 public class SecurityConfig {
 
     // JWT secret key for signing and verifying tokens
     // the value in the braces is the default value if the property is not set
-    @Value("${jwt.secret:defaultsecretkeymustbelongerthan256bits123456789101112}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
 
@@ -32,11 +36,10 @@ public class SecurityConfig {
 
     @Bean
     public WebFilter jwtAuthWebFilter() {
-        // This filter intercepts incoming requests and checks for JWT tokens
         return (exchange, chain) -> {
             String path = exchange.getRequest().getPath().value();
 
-            // Skip authentication for public endpoints
+            // Définir tous les chemins publics ici
             if (path.startsWith("/actuator") ||
                     path.startsWith("/fallback") ||
                     path.startsWith("/api/auth/login") ||
@@ -44,11 +47,19 @@ public class SecurityConfig {
                 return chain.filter(exchange);
             }
 
-            // Process JWT token for protected endpoints
+            // Vérifier le JWT pour les autres chemins
             return extractAndValidateToken(exchange)
-                    .flatMap(isValid -> {
-                        if (isValid) {
-                            return chain.filter(exchange);
+                    .flatMap(claims -> {
+                        if (claims != null) {
+                            // Ajouter les infos utilisateur comme headers
+                            ServerHttpRequest request = exchange.getRequest().mutate()
+                                    .header("X-User-Id", claims.get("userId", String.class))
+                                    .header("X-User-Name", claims.getSubject())
+                                    .header("X-User-Roles", String.join(",",
+                                            claims.get("authorities", List.class)))
+                                    .build();
+
+                            return chain.filter(exchange.mutate().request(request).build());
                         } else {
                             return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
                         }
@@ -58,21 +69,20 @@ public class SecurityConfig {
     }
 
     // Extracts the JWT token from the Authorization header and validates it
-    private Mono<Boolean> extractAndValidateToken(ServerWebExchange exchange) {
+    private Mono<Claims> extractAndValidateToken(ServerWebExchange exchange) {
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return Mono.just(false);
+            return Mono.empty();
         }
 
         String token = authHeader.substring(7);
 
         try {
-            // Validation simple du token
-            jwtParser().parseClaimsJws(token);
-            return Mono.just(true);
+            Claims claims = jwtParser().parseClaimsJws(token).getBody();
+            return Mono.just(claims);
         } catch (Exception e) {
-            return Mono.just(false);
+            return Mono.empty();
         }
     }
 

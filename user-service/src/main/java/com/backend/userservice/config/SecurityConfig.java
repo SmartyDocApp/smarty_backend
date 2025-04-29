@@ -5,80 +5,89 @@ package com.backend.userservice.config;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.IOException;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.crypto.SecretKey;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-   // @Value permet d'injecter des valeurs provenant de fichiers de configuration
-    // injecte la propriété jwt.secret
-   @Value("${jwt.secret:defaultsecretkeymustbelongerthan256bits123456789101112}")
-   private String jwtSecret;
-
-   @Autowired
-   private UserDetailsService userDetailsService;
-
-   @Bean
-   public PasswordEncoder passwordEncoder() {
-       return new BCryptPasswordEncoder();
-   }
-
-   @Bean
-   public AuthenticationManager authenticationManager() {
-       DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-       authProvider.setUserDetailsService(userDetailsService);
-       authProvider.setPasswordEncoder(passwordEncoder());
-       return new ProviderManager(authProvider);
-   }
-
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtParser());
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/**").permitAll()
+                        // Faire confiance aux requêtes venant de l'API Gateway
+                        .anyRequest().permitAll()
+                );
+
+        // Supprimer le filtre JWT, plus nécessaire ici
+        // .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
-    // Configurer la sécurité HTTP
+    // Remplacer la logique d'authentification par un filtre qui extrait l'utilisateur des headers
     @Bean
-    public JwtParser jwtParser() {
-        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
-        return Jwts.parserBuilder().setSigningKey(key).build();
+    public OncePerRequestFilter userContextFilter() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+                    throws ServletException, IOException, java.io.IOException {
+
+                // Extraire les infos utilisateur des headers
+                String userId = request.getHeader("X-User-Id");
+                String username = request.getHeader("X-User-Name");
+                String roles = request.getHeader("X-User-Roles");
+
+                // Si les headers sont présents, créer un context d'authentification
+                if (username != null) {
+                    List<GrantedAuthority> authorities = new ArrayList<>();
+                    if (roles != null) {
+                        for (String role : roles.split(",")) {
+                            authorities.add(new SimpleGrantedAuthority(role));
+                        }
+                    }
+
+                    // Créer un token d'authentification
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            username, null, authorities);
+
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+
+                chain.doFilter(request, response);
+            }
+        };
     }
-
-    // La méthode securityFilterChain configure la chaîne de filtres de sécurité
-    // exige une authentification pour toutes les requêtes sauf celles correspondant à /actuator/**.
-  @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-      http
-              .csrf(csrf -> csrf.disable())
-              .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-              .authorizeHttpRequests(auth -> auth
-                      .requestMatchers("/actuator/**").permitAll() // Pour le monitoring
-                      .requestMatchers("/api/auth/**").permitAll() // Authentication endpoints
-                      .requestMatchers("/api/public/**").permitAll() // Public endpoints
-                      .anyRequest().authenticated()
-              )
-              .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-
-      return http.build();
-  }
-
-
-
 }
