@@ -7,6 +7,5 @@ alwaysApply: true
 # Your rule content
 Always look to all context folder of the main folder
 
-- You can @ files here
+on the ask mode and agent mode, always looking at @web to look for best practice and current versions
 
-- You can use markdown but dont have to

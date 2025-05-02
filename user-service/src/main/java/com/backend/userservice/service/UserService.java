@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.backend.userservice.dto.UserDto;
+import com.backend.userservice.model.Role;
 import com.backend.userservice.model.User;
 import com.backend.userservice.repository.UserRepository;
 
@@ -97,6 +98,9 @@ public class UserService {
     // récupérer un utilisateur par son email
     public UserDto createUser(UserDto userDto) {
         User user = convertToEntity(userDto);
+        // Ajouter le rôle USER par défaut
+        Set<Role> defaultRoles = roleService.getDefaultRoles();
+        user.setRoles(defaultRoles);
         User savedUser = userRepository.save(user);
         return convertToDto(savedUser);
     }

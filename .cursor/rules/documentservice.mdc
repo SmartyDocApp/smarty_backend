@@ -1,0 +1,236 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Plan de Développement du Service Document (SGDI)
+
+## Fonctionnalités du Service Document (Simplifiées)
+
+Le service Document sera responsable de:
+
+- **Gestion complète des documents**:
+  - Upload et téléchargement de fichiers
+  - Stockage sécurisé avec architecture hybride (métadonnées et contenu)
+- **Organisation hiérarchique**:
+  - Structuration en dossiers/sous-dossiers
+  - Navigation dans l'arborescence documentaire
+- **Catégorisation et étiquetage**:
+  - Système de tags pour classification manuelle
+  - Association de métadonnées aux documents
+- **Recherche de base**:
+  - Recherche en texte intégral
+  - Filtrage par métadonnées (tags, date, type, etc.)
+- **Contrôle d'accès**:
+  - Partage de documents entre utilisateurs et espaces de travail
+  - Permissions de lecture/écriture
+
+## Architecture et Structure Technique
+
+### 1. Architecture de Stockage Hybride
+- **MySQL** pour les métadonnées structurées:
+  - Informations sur les documents (nom, type, créateur)
+  - Organisation (dossiers, chemins)
+  - Tags et catégories
+  - Références et relations
+- **MongoDB** pour le contenu non-structuré:
+  - Contenu binaire des documents
+  - Stockage flexible pour différents types de fichiers
+
+### 2. Structure du Projet
+```
+document-service/
+├── src/main/java/com/backend/documentservice/
+│   ├── config/           # Configuration Spring Boot et sécurité
+│   ├── controller/       # Endpoints REST
+│   ├── dto/              # Objets de transfert de données
+│   ├── exception/        # Gestion des exceptions
+│   ├── model/            # Entités
+│   │   ├── sql/          # Entités relationnelles (MySQL)
+│   │   └── nosql/        # Entités document (MongoDB)
+│   ├── repository/       # Accès aux données
+│   ├── service/          # Logique métier
+│   └── util/             # Classes utilitaires
+└── src/main/resources/
+    └── application.yml   # Configuration de l'application
+```
+
+## Plan de Développement
+
+### Étape 1: Configuration Initiale
+1. **Structure de base**:
+   - Créer le projet Spring Boot avec les dépendances nécessaires
+   - Configurer l'enregistrement auprès d'Eureka
+   - Établir les connexions avec MySQL et MongoDB
+
+2. **Configuration de sécurité**:
+   - la gestion JWT fait confiance à l'api-gateway tout comme les services auth-service et user-service
+   - Configurer les règles d'autorisation
+
+### Étape 2: Modèles de Données
+1. **Entités SQL**:
+   ```java
+   // Document (métadonnées)
+   public class Document {
+       private String id;
+       private String name;
+       private String contentId; // Référence au contenu MongoDB
+       private String userId;
+       private String folderId;
+       private String workspaceId; // null si personnel
+       private String type;
+       private LocalDateTime createdAt;
+       private LocalDateTime updatedAt;
+       // Autres métadonnées...
+   }
+
+   // Folder
+   public class Folder {
+       private String id;
+       private String name;
+       private String parentId; // Hiérarchie
+       private String userId;
+       private String workspaceId; // null si personnel
+   }
+
+   // Tag
+   public class Tag {
+       private String id;
+       private String name;
+       private String colorCode;
+   }
+
+   // DocumentTag (relation M:N)
+   public class DocumentTag {
+       private String id;
+       private String documentId;
+       private String tagId;
+   }
+   ```
+
+2. **Entités NoSQL**:
+   ```java
+   // DocumentContent
+   public class DocumentContent {
+       private String id;
+       private Binary content;
+       private String contentType;
+       private Long size;
+   }
+   ```
+
+### Étape 3: Repository et Service
+1. **Repositories**:
+   - DocumentRepository (JPA)
+   - FolderRepository (JPA)
+   - TagRepository (JPA)
+   - DocumentTagRepository (JPA)
+   - DocumentContentRepository (MongoDB)
+
+2. **Services**:
+   - DocumentService: gestion des opérations CRUD sur les documents
+   - FolderService: gestion des dossiers et hiérarchie
+   - TagService: gestion des tags
+   - StorageService: gestion du stockage et récupération du contenu
+   - ce service fait confiance au service-api-gateway pour la sécurité
+
+### Étape 4: API REST
+1. **Controllers**:
+   - DocumentController: endpoints pour la gestion des documents
+   - FolderController: endpoints pour la gestion des dossiers
+   - TagController: endpoints pour la gestion des tags
+   - SearchController: endpoints pour la recherche
+
+2. **Endpoints principaux**:
+   - `POST /api/documents`: upload d'un document
+   - `GET /api/documents/{id}`: récupération des métadonnées
+   - `GET /api/documents/{id}/content`: téléchargement du contenu
+   - `PUT /api/documents/{id}`: mise à jour
+   - `DELETE /api/documents/{id}`: suppression
+   - `GET /api/folders`: liste des dossiers
+   - `POST /api/documents/{id}/tags`: ajout de tags
+   - `GET /api/documents/search`: recherche
+
+### Étape 5: Système de Recherche
+1. **Recherche**:
+   - Implémentation de la recherche en texte intégral
+   - Filtrage par métadonnées (tags, type, date, etc.)
+   - Implémentation du tri des résultats
+
+### Étape 6: Tests et Documentation
+1. **Tests**:
+   - Tests unitaires pour chaque composant
+   - Tests d'intégration avec les bases de données
+   - Tests d'API avec MockMvc
+
+2. **Documentation**:
+   - Documentation Swagger/OpenAPI
+   - Documentation technique du service
+
+### Étape 7: Conteneurisation et Déploiement
+1. **Docker**:
+   - Création du Dockerfile
+   - Configuration pour intégration avec docker-compose
+
+2. **Kubernetes**:
+   - Manifests de déploiement
+   - Configuration de la persistance
+
+## Interactions avec les Autres Services
+- **API Gateway**: Routage des requêtes
+- **Service Utilisateur**: Validation des droits d'accès
+- **Service Workspace**: Contexte de partage des documents
+- **Service Auth**: Validation des tokens JWT
+
+## Dépendances Requises
+```xml
+<!-- Spring Boot Starters -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-mongodb</artifactId>
+</dependency>
+
+<!-- Eureka Client -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+
+<!-- MySQL -->
+<dependency>
+    <groupId>com.mysql</groupId>
+    <artifactId>mysql-connector-j</artifactId>
+</dependency>
+
+<!-- Sécurité -->
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+</dependency>
+
+<!-- Utilitaires -->
+<dependency>
+    <groupId>org.apache.tika</groupId>
+    <artifactId>tika-core</artifactId>
+    <version>2.9.1</version>
+</dependency>
+```
+
+## Prochaines Améliorations (Post-Phase 1)
+- Système de prévisualisation des documents
+- Gestion des versions des documents
+- Extraction de contenu avancée 
+- Intégration avec des services cloud de stockage externes
+- Amélioration des capacités de recherche avec des algorithmes plus avancés
