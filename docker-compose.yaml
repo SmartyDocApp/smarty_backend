@@ -32,6 +32,69 @@ services:
       timeout: 5s
       retries: 5
 
+
+  # MySQL pour le service document
+  mysql-document:
+    image: mysql:8.0
+    container_name: smarty-mysql-document
+    environment:
+      MYSQL_DATABASE: smarty-documents
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: user
+      MYSQL_PASSWORD: 54321
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_document_data:/var/lib/mysql
+    networks:
+      - smarty-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p54321",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB pour le service document
+  mongo-document:
+    image: mongo:6.0
+    container_name: smarty-mongo-document
+    environment:
+      MONGO_INITDB_DATABASE: smarty-documents
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_document_data:/data/db
+    networks:
+      - smarty-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "-u",
+          "root",
+          "-p",
+          "rootpassword",
+          "--eval",
+          "db.adminCommand('ping')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Service de découverte Eureka
   eureka-server:
     build: ./eureka-server
@@ -98,3 +161,5 @@ networks:
 
 volumes:
   mysql_data:
+  mysql_document_data:
+  mongo_document_data:
