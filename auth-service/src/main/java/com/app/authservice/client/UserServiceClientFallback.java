@@ -1,12 +1,11 @@
 package com.app.authservice.client;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
-import com.app.authservice.dto.RegisterRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import com.app.authservice.dto.RegisterRequest;
 import com.app.authservice.dto.UserDto;
 
 @Component
@@ -15,6 +14,12 @@ public class UserServiceClientFallback implements UserServiceClient {
     @Override
     public ResponseEntity<UserDto> getUserByUsername(String username) {
         return ResponseEntity.notFound().build();
+    }
+
+    @Override
+    public ResponseEntity<Boolean> existsByUsername(String username) {
+        // En cas d'échec, nous supposons que l'utilisateur n'existe pas
+        return ResponseEntity.ok(false);
     }
 
 //    @Override
@@ -29,7 +34,7 @@ public class UserServiceClientFallback implements UserServiceClient {
 
     @Override
     public ResponseEntity<UserDto> loginUser(Map<String, String> loginRequest) {
-        // Ici, tu peux retourner une réponse d’erreur ou null selon ta logique
+        // Ici, tu peux retourner une réponse d'erreur ou null selon ta logique
         return ResponseEntity.status(503).build(); // 503 Service Unavailable
     }
 

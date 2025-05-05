@@ -1,11 +1,20 @@
 server:
   port: 9000
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: AUTH_SESSION
+        secure: false
+        http-only: true
+        same-site: lax
+        max-age: 3600
 
 spring:
   application:
     name: auth-service
   datasource:
-    url: jdbc:mysql://localhost:3308/auth-db?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3308/smarty-users?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: user
     password: 54321
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -17,6 +26,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+      continue-on-error: true
+      encoding: UTF-8
+
+  # Configuration de la sécurité Spring
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:9000
 
 eureka:
   client:
@@ -25,18 +47,16 @@ eureka:
   instance:
     prefer-ip-address: true
 
-jwt:
-  secret: aMcJf4ueaCnS39xvkn73Jjf930shfnF45hn93mFnvYrTuIoK3cv0
-  expiration: 86400000 # 24 heures en millisecondes (24 * 60 * 60 * 1000)
-  refresh-expiration: 604800000 # 7 jours en millisecondes (7 * 24 * 60 * 60 * 1000)
-
-# Configuration pour la communication avec le service utilisateur
-user-service:
-  ribbon:
-    MaxAutoRetries: 1
-    MaxAutoRetriesNextServer: 1
-    ReadTimeout: 5000
-    ConnectTimeout: 2000
+# Configuration de Feign Client
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+  circuitbreaker:
+    enabled: true
 
 # Configuration des points de terminaison Actuator pour le monitoring
 management:
@@ -49,3 +69,10 @@ management:
       probes:
         enabled: true
       show-details: always
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    com.app.authservice: DEBUG
+    com.app.authservice.client: DEBUG

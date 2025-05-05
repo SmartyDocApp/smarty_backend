@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.userservice.dto.RegisterRequest;
@@ -32,18 +33,18 @@ public class UserController {
 
     // Récupérer tous les utilisateurs
     @GetMapping
-   public ResponseEntity<List<UserDto>> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         List<UserDto> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
-   }
+    }
 
     // Récupérer un utilisateur par son id
-   @GetMapping("/{id}")
-   public ResponseEntity<UserDto> getUserById(String id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable String id) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-   }
+    }
 
     // Récupérer un utilisateur par son nom d'utilisateur
     @GetMapping("/username/{username}")
@@ -51,6 +52,13 @@ public class UserController {
         return userService.getUserByUsername(username)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+    
+    // Vérifier si un utilisateur existe par son nom d'utilisateur
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> existsByUsername(@RequestParam String username) {
+        boolean exists = userService.getUserByUsername(username).isPresent();
+        return ResponseEntity.ok(exists);
     }
 
     // Récupérer un utilisateur par son email
@@ -108,7 +116,4 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
-
-
-
 }

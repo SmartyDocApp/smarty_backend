@@ -66,3 +66,8 @@ docker-compose.override.yml
 *.log
 *.sqlite
 *.h2.db
+
+.env
+
+.cursor
+.idea

@@ -3,6 +3,13 @@
 # -------------------------------------------------------------------------
 server:
   port: 8080 # Port on which the API Gateway will listen for incoming requests
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        # En production, activez le mode sécurisé (requiert HTTPS)
+        secure: false
+      timeout: 30m
 
 # -------------------------------------------------------------------------
 # SPRING CONFIGURATION
@@ -37,6 +44,55 @@ spring:
         - AddRequestHeader=X-Request-Source, api-gateway # Adds a header indicating the request source
         - AddResponseHeader=X-Response-Time, $\{responseTime:120} # Adds response time in header
         - SetResponseHeader=X-Powered-By, SGDI Gateway # Identifies the gateway in responses
+        # Suppression de l'en-tête global Content-Type qui pourrait interférer avec React
+        # - SetResponseHeader=Content-Type, application/json # Force JSON content type for all responses
+
+      # Routes configuration
+      routes:
+        # Auth Service Routes
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/**, /oauth2/**
+          filters:
+            - RewritePath=/auth/(?<segment>.*), /api/auth/$\{segment}
+            - SetResponseHeader=Content-Type, application/json
+
+        # User Service Routes
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/user
+            - SetResponseHeader=Content-Type, application/json
+
+# -------------------------------------------------------------------------
+# OAuth2 CONFIGURATION
+# -------------------------------------------------------------------------
+security:
+  oauth2:
+    client:
+      registration:
+        auth-service:
+          provider: auth-service
+          client-id: api-gateway
+          client-secret: gateway-secret
+          client-authentication-method: client_secret_basic
+          authorization-grant-type: authorization_code
+          redirect-uri: "{baseUrl}/login/oauth2/code/auth-service"
+          scope: openid,read,write
+      provider:
+        auth-service:
+          issuer-uri: http://localhost:9000
+          authorization-uri: http://localhost:9000/oauth2/authorize
+          token-uri: http://localhost:9000/oauth2/token
+          user-info-uri: http://localhost:9000/userinfo
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+          user-name-attribute: sub
 
 # -------------------------------------------------------------------------
 # EUREKA CONFIGURATION
@@ -122,14 +178,6 @@ resilience4j:
         timeoutDuration: 5s
       authServiceCircuitBreaker:
         timeoutDuration: 5s
-
-# -------------------------------------------------------------------------
-# JWT CONFIGURATION
-# -------------------------------------------------------------------------
-jwt:
-  # Secret key to validate JWT tokens
-  # CAUTION: Use a more secure key in production and store it in a vault
-  secret: ${JWT_SECRET:5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437}
 
 # -------------------------------------------------------------------------
 # ACTUATOR CONFIGURATION FOR MONITORING

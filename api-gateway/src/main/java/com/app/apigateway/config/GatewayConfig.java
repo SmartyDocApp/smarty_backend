@@ -1,21 +1,19 @@
 package com.app.apigateway.config;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import java.time.Duration;
+
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.Customizer;
-import org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory;
-import org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory.RetryConfig;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
-import reactor.core.publisher.Mono;
 
-import java.time.Duration;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import reactor.core.publisher.Mono;
 
 @Configuration
 public class GatewayConfig {
@@ -36,10 +34,16 @@ public class GatewayConfig {
                                 .circuitBreaker(config -> config
                                         .setName("userServiceCircuitBreaker")
                                         .setFallbackUri("forward:/fallback/user-service"))
-                                .rewritePath("/api/users/(?<segment>.*)", "/api/users/${segment}"))
+                                .rewritePath("/api/users/(?<segment>.*)", "/api/users/${segment}")
+                                .addResponseHeader("Content-Type", "application/json"))
                         .uri("lb://user-service"))
 
-//                
+                // Route spécifique pour l'enregistrement des utilisateurs supprimée
+//                .route("user-register", r -> r.path("/api/users/register")
+//                        .filters(f -> f
+//                                .rewritePath("/api/users/register", "/api/users/register"))
+//                        .uri("lb://user-service"))
+
                 .route("document-service", r -> r.path("/api/documents/**")
                         .filters(f -> f
                                 .circuitBreaker(config -> config
@@ -71,7 +75,8 @@ public class GatewayConfig {
                                 .circuitBreaker(config -> config
                                         .setName("authServiceCircuitBreaker")
                                         .setFallbackUri("forward:/fallback/auth-service"))
-                                .rewritePath("/api/auth/(?<segment>.*)", "/api/auth/${segment}"))
+                                .rewritePath("/api/auth/(?<segment>.*)", "/api/auth/${segment}")
+                                .addResponseHeader("Content-Type", "application/json"))
                         .uri("lb://auth-service"))
 
                 .build();

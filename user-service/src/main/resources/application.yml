@@ -17,9 +17,24 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
-# JWT Configuration
-jwt:
-  secret: ZGVmYXVsdHNlY3JldGtleW11c3RiZWxvbmdlcnRoYW4yNTZiaXRzMTIzNDU2Nzg5MTAxMTEy
+
+# Security
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope:
+              - user:email
+              - read:user
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
 
 eureka:
   client:

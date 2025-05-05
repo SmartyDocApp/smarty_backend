@@ -32,7 +32,6 @@ services:
       timeout: 5s
       retries: 5
 
-
   # MySQL pour le service document
   mysql-document:
     image: mysql:8.0
@@ -110,28 +109,6 @@ services:
       timeout: 5s
       retries: 5
 
-  #Service APi Gateway
-  api-gateway:
-    build: ./api-gateway
-    image: smarty/api-gateway:latest
-    container_name: api-gateway
-    ports:
-      - "8080:8080"
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    env_file:
-      - ./api-gateway/.env
-    environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    networks:
-      - smarty-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # Service utilisateur
   user-service:
     build: ./user-service
@@ -151,6 +128,57 @@ services:
       - smarty-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8100/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service d'authentification
+  auth-service:
+    build: ./auth-service
+    image: smarty/auth-service:latest
+    container_name: auth-service
+    ports:
+      - "9000:9000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smarty-users?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - smarty-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #Service APi Gateway
+  api-gateway:
+    build: ./api-gateway
+    image: smarty/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    env_file:
+      - ./api-gateway/.env
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - smarty-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
